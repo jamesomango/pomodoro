@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pomodoro Timer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jersey+25&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Jersey 25', sans-serif;
+      background: #E8E4DF;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+    .ui-box {
+      background: #ffffff;
+      border-radius: 0;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    }
+    .header-tomato {
+      display: block;
+      width: 100%;
+      max-width: 200px;
+      margin-bottom: 0.15rem;
+    }
+    .title {
+      text-align: center;
+      margin-bottom: 2rem;
+      line-height: 1;
+      margin-top: -0.2rem;
+    }
+    .title .pomodoro {
+      font-size: 26pt;
+      color: #3F3F3F;
+      letter-spacing: 0.08em;
+      margin-bottom: -0.2em;
+    }
+    .title .timer {
+      font-size: 26pt;
+      color: #EE5647;
+      letter-spacing: 0.08em;
+      margin-left: 0.15em;
+      margin-top: -0.15em;
+    }
+    .timer-section {
+      width: 100%;
+      max-width: 340px;
+      margin-bottom: 1.75rem;
+    }
+    .timer-section h2 { display: none; }
+    .time-display {
+      background: #EBE7D8;
+      border: 1px solid #D6D1BF;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 0.75rem;
+      text-align: center;
+    }
+    .time-display span {
+      font-size: 2.5rem;
+      color: #3F3F3F;
+      font-variant-numeric: tabular-nums;
+    }
+    .controls { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .btn {
+      font-family: 'Jersey 25', sans-serif;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      padding: 0.6rem 1rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      color: #3F3F3F;
+      transition: filter 0.15s;
+    }
+    .btn:hover { filter: brightness(0.95); }
+    .btn:active { filter: brightness(0.9); }
+    .btn-start, .btn-reset {
+      background: #FFCDA1;
+      flex: 1;
+      min-width: 90px;
+      font-size: 1.2rem;
+    }
+    .btn-plus {
+      background: #9CF89C;
+      color: #3F3F3F;
+      min-width: 48px;
+      justify-content: center;
+      font-size: 1.35rem;
+      padding: 0.6rem;
+    }
+    .btn-minus {
+      background: #FFD8D7;
+      color: #3F3F3F;
+      min-width: 48px;
+      justify-content: center;
+      font-size: 1.35rem;
+      padding: 0.6rem;
+    }
+    .btn svg { width: 14px; height: 14px; }
+  </style>
+</head>
+<body>
+  <div class="ui-box">
+  <img class="header-tomato" src="pomodoro/tomato.png" alt="" />
+  <div class="title">
+    <div class="pomodoro">POMODORO</div>
+    <div class="timer">TIMER</div>
+  </div>
+  <section class="timer-section" data-timer="pomodoro">
+    <h2>Pomodoro Timer</h2>
+    <div class="time-display"><span id="pomodoro-display">25:00</span></div>
+    <div class="controls">
+      <button type="button" class="btn btn-start" id="pomodoro-start" aria-label="Start"><span>START</span><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
+      <button type="button" class="btn btn-reset" id="pomodoro-reset" aria-label="Reset"><span>RESET</span><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
+      <button type="button" class="btn btn-plus" id="pomodoro-plus" aria-label="Add minute">+</button>
+      <button type="button" class="btn btn-minus" id="pomodoro-minus" aria-label="Subtract minute">−</button>
+    </div>
+  </section>
+  <section class="timer-section" data-timer="break">
+    <h2>Break Timer</h2>
+    <div class="time-display"><span id="break-display">5:00</span></div>
+    <div class="controls">
+      <button type="button" class="btn btn-start" id="break-start" aria-label="Start"><span>START</span><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
+      <button type="button" class="btn btn-reset" id="break-reset" aria-label="Reset"><span>RESET</span><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
+      <button type="button" class="btn btn-plus" id="break-plus" aria-label="Add minute">+</button>
+      <button type="button" class="btn btn-minus" id="break-minus" aria-label="Subtract minute">−</button>
+    </div>
+  </section>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var POMODORO_DEFAULT = 25 * 60, BREAK_DEFAULT = 5 * 60;
+      function formatTime(seconds) {
+        var m = Math.floor(seconds / 60), s = seconds % 60;
+        return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+      }
+      function createAlarm() {
+        try {
+          var ctx = new (window.AudioContext || window.webkitAudioContext)();
+          function beep() {
+            var osc = ctx.createOscillator(), gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.frequency.value = 880; osc.type = 'sine';
+            gain.gain.setValueAtTime(0.3, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+            osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.3);
+          }
+          function loop() { beep(); setTimeout(beep, 400); setTimeout(beep, 800); }
+          loop();
+          var id = setInterval(loop, 2000);
+          return function () { clearInterval(id); };
+        } catch (e) { return function () {}; }
+      }
+      function createTimer(displayId, startId, resetId, plusId, minusId, defaultSeconds) {
+        var totalSeconds = defaultSeconds, remaining = defaultSeconds, intervalId = null, stopAlarm = null;
+        var display = document.getElementById(displayId);
+        var startBtn = document.getElementById(startId);
+        var resetBtn = document.getElementById(resetId);
+        var plusBtn = document.getElementById(plusId);
+        var minusBtn = document.getElementById(minusId);
+        if (!display || !startBtn || !resetBtn || !plusBtn || !minusBtn) return;
+        var startLabel = startBtn.querySelector('span');
+        if (!startLabel) return;
+        function updateDisplay() { display.textContent = formatTime(remaining); }
+        function setRunning(running) {
+          startLabel.textContent = running ? 'STOP' : 'START';
+          startBtn.setAttribute('aria-label', running ? 'Stop' : 'Start');
+          plusBtn.disabled = minusBtn.disabled = !!running;
+        }
+        function stop() {
+          if (intervalId) clearInterval(intervalId), intervalId = null;
+          if (stopAlarm) stopAlarm(), stopAlarm = null;
+          setRunning(false);
+        }
+        function tick() {
+          if (remaining <= 0) { stop(); stopAlarm = createAlarm(); return; }
+          remaining--; updateDisplay();
+        }
+        function start() {
+          var wasRunning = !!intervalId;
+          stop();
+          if (wasRunning) return;
+          if (remaining <= 0) remaining = totalSeconds, updateDisplay();
+          setRunning(true);
+          intervalId = setInterval(tick, 1000);
+        }
+        function reset() { stop(); remaining = totalSeconds; updateDisplay(); }
+        function addMinute() {
+          if (!intervalId) totalSeconds = Math.min(99 * 60, totalSeconds + 60), remaining = totalSeconds, updateDisplay();
+        }
+        function subtractMinute() {
+          if (!intervalId) totalSeconds = Math.max(60, totalSeconds - 60), remaining = remaining > totalSeconds ? totalSeconds : remaining, updateDisplay();
+        }
+        startBtn.addEventListener('click', start);
+        resetBtn.addEventListener('click', reset);
+        plusBtn.addEventListener('click', addMinute);
+        minusBtn.addEventListener('click', subtractMinute);
+        updateDisplay();
+      }
+      createTimer('pomodoro-display', 'pomodoro-start', 'pomodoro-reset', 'pomodoro-plus', 'pomodoro-minus', POMODORO_DEFAULT);
+      createTimer('break-display', 'break-start', 'break-reset', 'break-plus', 'break-minus', BREAK_DEFAULT);
+    });
+  </script>
+</body>
+</html>
